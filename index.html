@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cuadrante de trabajo</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cuadrante">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: sobrio, de oficina, como la hoja que ya usan; claro y rápido en el móvil.
+   IDEA: la hoja de Word del cuadrante, en papel, con su rejilla negra y la letra de máquina.
+   PICTURE: el propio cuadrante del mes ocupa la primera pantalla.
+   COLOUR and TYPE: papel blanco, tinta negra, gris de festivo y rojo de festivo; Courier Prime para el cuadrante, Hanken Grotesk para la interfaz.
+   LAYOUT: pestañas arriba, rejilla 7 columnas a todo el ancho, ficha del día en hoja inferior. */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#131517);--ink:light-dark(#141414,#ececea);--mute:light-dark(#5d5f63,#a4a7ab);--line:light-dark(#c4c4c4,#3b3e43);--rule:light-dark(#141414,#d9d9d6);--shade:light-dark(#e4e4e2,#26292d);--soft:light-dark(#f4f4f2,#1b1e21);--red:light-dark(#c4122f,#ff6f7a);--acc:light-dark(#1b3a78,#9bb8ff);--ok:light-dark(#1d6b3a,#7fd39b)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Hanken Grotesk",system-ui,sans-serif;overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}
+.mono{font-family:"Courier Prime","Courier New",monospace}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px max(4vw,12px) 8px}
+header h1{margin:0;font:700 22px/1.1 "Courier Prime",monospace;letter-spacing:.02em}
+.me{font-size:14px;color:var(--mute);text-align:right;line-height:1.3}.me b{color:var(--ink)}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 max(4vw,12px);border-bottom:2px solid var(--rule)}
+nav.tabs button{flex:none;border:0;background:none;padding:10px 14px;min-height:44px;font-weight:600;color:var(--mute);border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer}
+nav.tabs button.on{color:var(--ink);border-bottom-color:var(--acc)}
+nav.tabs .badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:var(--red);color:#fff;font-size:12px;line-height:18px}
+main{padding:16px max(4vw,10px) 48px;max-width:1240px;margin:0 auto}
+section[hidden]{display:none}
+.status{font-size:14px;color:var(--mute);margin:0 0 10px}
+.status.err{color:var(--red)}
+.mhead{display:flex;align-items:center;justify-content:center;gap:14px;margin:4px 0 14px}
+.mhead h2{margin:0;font:700 clamp(22px,5vw,40px)/1.05 "Courier Prime",monospace;text-decoration:underline;text-underline-offset:6px;letter-spacing:.04em;min-width:9ch;text-align:center}
+.nb{width:44px;height:44px;border:1.5px solid var(--rule);background:var(--bg);border-radius:50%;font-size:20px;cursor:pointer}
+.today{border:1px solid var(--line);background:var(--bg);border-radius:20px;padding:6px 14px;min-height:36px;cursor:pointer;font-size:14px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:2.5px solid var(--rule);font-family:"Courier Prime","Courier New",monospace}
+.cal .h{text-align:center;padding:6px 2px;border-right:1.5px solid var(--rule);border-bottom:2.5px solid var(--rule);font-size:clamp(11px,1.9vw,20px);letter-spacing:.06em}
+.cal .h:nth-child(7){border-right:0}
+.c{display:flex;flex-direction:column;min-height:132px;border:0;border-right:1.5px solid var(--rule);border-bottom:1.5px solid var(--rule);background:none;padding:4px 6px 0;text-align:left;cursor:pointer;font-size:14px;line-height:1.25;font-family:inherit}
+.c:nth-child(7n){border-right:0}
+.c.x{cursor:default;background:var(--shade)}
+.c.fest{background:var(--shade)}
+.c.fest .n,.c.fest .who,.c.finde .n,.c.finde .who{color:var(--red);font-weight:700}
+.c.hoy .n{background:var(--ink);color:var(--bg)!important;padding:0 4px}
+.c:focus-visible{outline:3px solid var(--acc);outline-offset:-3px}
+.c .top{display:flex;justify-content:space-between;align-items:center}
+.c .n{font-size:1.05em}
+.c .fl{display:flex;gap:3px;align-items:center}
+.c .who{display:flex;flex-direction:column;padding:2px 0 4px;text-transform:uppercase;overflow:hidden}
+.c .who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c .sub{margin-top:auto;border-top:1px solid var(--rule);margin-inline:-6px;padding:3px 6px 4px;min-height:2.6em;font-size:10.5px;font-weight:700;line-height:1.25;text-transform:uppercase}
+.warn{width:15px;height:15px;flex:none}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--mute);margin:12px 0 0}
+.legend i{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:5px;border:1px solid var(--line)}
+@media(max-width:700px){.c{min-height:96px;padding:3px 2px 0;font-size:9px}.c .sub{font-size:8px;margin-inline:-3px;padding:2px 3px 3px}.warn{width:11px;height:11px}.dot{width:5px;height:5px}}
+/* hoja del día */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:30}
+.ov.on{display:flex}
+.sh{background:var(--bg);width:min(680px,100%);max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px max(4vw,16px) 28px;box-shadow:0 -8px 30px rgba(0,0,0,.25)}
+@media(min-width:760px){.ov{align-items:center}.sh{border-radius:14px}}
+.shh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.shh h3{margin:0;font:700 26px/1.1 "Courier Prime",monospace}
+.x-btn{width:44px;height:44px;border:0;background:var(--soft);border-radius:50%;font-size:22px;cursor:pointer;flex:none}
+.tag{display:inline-block;font-size:13px;font-weight:600;padding:2px 9px;border-radius:12px;background:var(--soft);margin:6px 6px 0 0}
+.tag.red{background:var(--red);color:#fff}
+.alert{border-left:4px solid var(--red);background:var(--soft);padding:10px 12px;margin:14px 0;font-size:15px}
+.alert ul{margin:4px 0 0;padding-left:18px}
+h4{margin:18px 0 4px;font-size:13px;letter-spacing:.04em;color:var(--mute);font-weight:700}
+.row{display:grid;grid-template-columns:4.6em minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line)}
+.row .t{font:700 18px "Courier Prime",monospace;white-space:nowrap}
+.row .nm{font-weight:600}.row .ds{color:var(--mute);font-size:14px}
+.empty{color:var(--mute);font-size:14px;padding:6px 0}
+.card{border:1.5px solid var(--line);border-radius:12px;padding:14px;margin:16px 0}
+.card>h4:first-child,.card>h3:first-child{margin-top:0}
+.form{display:grid;gap:12px}
+.form label,.fld{display:grid;gap:4px;font-size:14px;font-weight:600}
+input[type=text],input[type=date],input[type=time],select,textarea{width:100%;min-height:44px;padding:8px 10px;font-size:16px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg)}
+textarea{min-height:80px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:1.5px solid var(--line);border-radius:22px;cursor:pointer;font-weight:600}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.seg label:has(input:focus-visible){outline:3px solid var(--acc)}
+.chk{display:flex!important;grid-template-columns:none;align-items:center;gap:10px;min-height:44px;font-weight:600}
+.chk input{width:22px;height:22px}
+.btn{min-height:44px;padding:0 18px;border-radius:10px;border:1.5px solid var(--ink);background:var(--ink);color:var(--bg);font-weight:700;cursor:pointer}
+.btn.sec{background:var(--bg);color:var(--ink)}
+.btn.dan{background:var(--bg);color:var(--red);border-color:var(--red)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:14px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.hid{display:none!important}
+.list .it{display:grid;grid-template-columns:5.6em minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.list .it .t{font:700 17px/1.2 "Courier Prime",monospace}
+.list .it .t small{display:block;font-size:14px;color:var(--mute)}
+.list .it p{margin:2px 0;font-size:15px}
+.list img{max-width:100%;border-radius:8px;margin-top:6px}
+.log{font-size:15px}.log .it{grid-template-columns:6.2em minmax(0,1fr)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--bg)}
+thead th{font-size:12px;color:var(--mute);vertical-align:bottom;white-space:normal;min-width:3.4em}
+td.z{color:var(--line)}
+.wk{display:grid;grid-template-columns:minmax(0,1fr) 7.5em;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:15px}
+.wk small{color:var(--mute);display:block}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:12px;max-width:min(92vw,520px);font-size:15px;z-index:40;box-shadow:0 6px 24px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:12px}
+.pick button{min-height:48px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);font-weight:600;cursor:pointer}
+.pick button:disabled{opacity:.4;cursor:not-allowed}
+.note{font-size:13px;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+<style>
+.auth{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto}
+.auth[hidden]{display:none}
+.auth .box{width:min(420px,100%)}
+.auth h2{font:700 34px/1.05 "Courier Prime",monospace;margin:0 0 6px;text-decoration:underline;text-underline-offset:6px}
+.auth p{color:var(--mute)}
+.linkb{background:none;border:0;color:var(--acc);font-weight:600;padding:10px 0;min-height:44px;cursor:pointer;text-decoration:underline}
+.err{color:var(--red);font-weight:600;min-height:1.4em;margin:4px 0}
+input[type=email],input[type=password]{width:100%;min-height:44px;padding:8px 10px;font-size:16px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg)}
+</style></head><body>
+<div class="auth" id="auth" hidden><div class="box" id="authbox"></div></div>
+
+<header><h1>CUADRANTE</h1><div class="me"><span id="me">Conectando…</span><br><button class="linkb" id="salir" style="min-height:28px;padding:0;font-size:13px">Cerrar sesión</button></div></header>
+<nav class="tabs" id="tabs"></nav>
+<main>
+<p class="status" id="st"></p>
+
+<section id="t-cuadrante">
+  <div class="mhead"><button class="nb" id="prev" aria-label="Mes anterior">‹</button><h2 id="mtit"></h2><button class="nb" id="next" aria-label="Mes siguiente">›</button></div>
+  <div class="cal" id="cal"></div>
+  <div class="legend"><span>Arriba: de tarde · abajo: libres y juicios</span><span><i style="background:var(--shade)"></i>Festivo</span><span style="color:var(--red);font-weight:700">ROJO: trabaja en festivo o fin de semana</span><span><svg class="warn" viewBox="0 0 16 16"><path d="M8 1 15 14H1z" fill="var(--red)"/><path d="M8 6v4M8 11.6v.6" stroke="#fff" stroke-width="1.6"/></svg> Faltan mínimos</span><span><i class="dot" style="display:inline-block;border:0"></i>Tu nota</span></div>
+  <p class="acts" style="justify-content:center;margin-top:14px"><button class="today" id="hoy">Ir a hoy</button></p>
+</section>
+
+<section id="t-juicios" hidden>
+  <div class="card"><h3 id="jtit" style="margin:0 0 10px">Nuevo juicio</h3>
+  <form id="jf" class="form" autocomplete="off">
+    <div class="fld">Lugar<div class="seg"><label><input type="radio" name="lugar" value="Sevilla" checked>Sevilla</label><label><input type="radio" name="lugar" value="Fuera">Fuera</label></div></div>
+    <div class="fld" id="w-mod">Modalidad<div class="seg"><label><input type="radio" name="mod" value="Presencial" checked>Presencial</label><label><input type="radio" name="mod" value="WebEx">WebEx</label></div></div>
+    <div class="fld" id="w-web">WebEx<div class="seg"><label class="chk" style="padding:0 16px"><input type="checkbox" name="sol">Solicitada</label><label class="chk" style="padding:0 16px"><input type="checkbox" name="con">Concedida</label></div></div>
+    <div class="fld">Tipo<div class="seg"><label><input type="radio" name="jur" value="Penal" checked>Penal</label><label><input type="radio" name="jur" value="Audiencia">Audiencia</label></div></div>
+    <label><span id="l-sala">Juzgado de lo Penal (nº)</span><input type="text" name="sala"></label>
+    <div class="two"><label>Día<input type="date" name="fecha"></label><label>Hora<input type="time" name="hora"></label></div>
+    <label>Funcionario citado también<select name="citado" id="jcit"></select></label>
+    <label>Procedimiento<input type="text" name="proc"></label>
+    <label>Número de informe<input type="text" name="inf"></label>
+    <label>Foto o imagen (opcional)<input type="file" accept="image/*" id="jfoto"></label>
+    <img id="jprev" class="hid" alt="Vista previa" style="max-width:220px;border-radius:8px">
+    <label class="chk"><input type="checkbox" name="marcar" checked>Marcarme «juicio» ese día en el cuadrante</label>
+    <div class="acts"><button class="btn" type="submit">Guardar juicio</button><button class="btn sec hid" type="button" id="jcancel">Cancelar edición</button></div>
+    <p class="note" style="margin:0">Solo tú ves esta lista. Los campos que no conozcas pueden quedar en blanco.</p>
+  </form></div>
+  <h4>MIS JUICIOS</h4><div class="list" id="jlist"></div>
+</section>
+
+<section id="t-estad" hidden>
+  <div class="acts" style="align-items:end">
+    <label class="fld" style="width:7em">Año<select id="sy"></select></label>
+    <label class="fld" style="width:11em">Periodo<select id="sm"></select></label>
+    <label class="chk"><input type="checkbox" id="shoy" checked>Solo hasta hoy</label>
+  </div>
+  <p class="note" id="snote"></p>
+  <div class="scroll"><table id="stab"></table></div>
+  <p class="note">Mañana y Tarde cuentan días laborables. «Finde/fest.» = días trabajados en fin de semana o festivo. «Vie. tarde» = viernes laborable de tarde; «Víspera» = tarde de un día anterior a festivo.</p>
+</section>
+
+<section id="t-basica" hidden>
+  <div class="card"><h3 style="margin:0 0 8px">Rotación de permisos por grupo</h3><div class="scroll"><table id="rot"></table></div>
+  <p class="note">Grupo A: Julián, Escobar, Laura, Carballo · Grupo B: Myriam, Ale, Maqueda, Fran · Grupo C: Luis, Elena, José Carlos. La fila 26-27 sigue la rotación; confírmala.</p></div>
+  <div class="card"><h3 style="margin:0 0 8px">Preferencias</h3>
+  <form id="pf" class="form"><div class="two"><label>Periodo<select name="per"><option>Navidad</option><option>Semana Santa</option><option>Feria</option><option>Puente</option><option>Vacaciones</option><option>Otro</option></select></label><label>Año / fechas<input type="text" name="cuando" placeholder="p. ej. Navidad 26-27"></label></div>
+  <label>Preferencia<textarea name="txt"></textarea></label><div class="acts"><button class="btn" type="submit">Añadir</button></div></form>
+  <div class="list" id="plist"></div>
+  <p class="note">Aquí se cargarán las preferencias de años anteriores.</p></div>
+</section>
+
+<section id="t-jefes" hidden>
+  <div class="card"><h3 style="margin:0 0 8px">Cómo quieres recibir los cambios</h3>
+  <div class="seg" id="modo"><label><input type="radio" name="modo" value="inmediata">Aviso al móvil</label><label><input type="radio" name="modo" value="informe">Informe al entrar</label><label><input type="radio" name="modo" value="ambos">Los dos</label></div>
+  <p class="note">Aviso al móvil: te llega una notificación aunque tengas la app cerrada (tarda hasta unos 10 minutos). Informe: al abrir la app ves todo lo cambiado desde tu última visita.</p>
+  <button class="btn sec" id="notif">Activar avisos en este móvil</button><p class="note" id="notifst"></p></div>
+  <div class="card"><h3 style="margin:0 0 8px">Registro de cambios</h3>
+  <label class="fld" style="max-width:16em">Funcionario<select id="lf"></select></label><div class="list log" id="log"></div></div>
+  <div class="card"><h3 style="margin:0 0 4px">Grupo que cubre las tardes</h3><p class="note" style="margin:0 0 8px">Rotación A-B-C semanal (semana del 30 nov 2026 = B). Cambia el grupo en las semanas especiales.</p><div id="cad"></div></div>
+  <div class="card"><h3 style="margin:0 0 8px">Festivos</h3><div id="fest"></div>
+  <form id="ff" class="form" style="margin-top:12px"><div class="two"><label>Fecha<input type="date" name="f"></label><label>Nombre<input type="text" name="n"></label></div><div class="acts"><button class="btn sec" type="submit">Añadir festivo</button></div></form></div>
+</section>
+
+<section id="t-plantilla" hidden>
+  <div class="card"><h3 style="margin:0 0 4px">Correos de la plantilla</h3><p class="note" style="margin:0 0 10px">Solo pueden entrar los correos de esta lista. Cada uno se crea la cuenta con su correo y su contraseña. Los jefes y quien marques como administrador pueden editar esta lista.</p><div id="plan"></div></div>
+</section>
+</main>
+
+<div class="ov" id="ov"><div class="sh" role="dialog" aria-modal="true" aria-labelledby="dtit"><div id="dinfo"></div><div id="ded"></div></div></div>
+<div class="ov" id="ov2"><div class="sh" role="dialog" aria-modal="true"><div id="m2"></div></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendEmailVerification,sendPasswordResetEmail,signOut} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+import {initializeFirestore,persistentLocalCache,doc,collection,query,where,orderBy,limit,onSnapshot,getDoc,getDocs,setDoc,deleteDoc,addDoc,updateDoc,serverTimestamp,arrayUnion} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+import {getMessaging,getToken,isSupported} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-messaging.js";
+
+const CFG={apiKey:"AIzaSyAU3fZsiykk4Te9q5brLNapZq3DHZnW3N4",authDomain:"cuadrante-trabajo-7631e.firebaseapp.com",projectId:"cuadrante-trabajo-7631e",storageBucket:"cuadrante-trabajo-7631e.firebasestorage.app",messagingSenderId:"149367702645",appId:"1:149367702645:web:195b0714db6a779494e43c"};
+const VAPID="BN0_mIOsrVBTSHvITwCTHurNXRkhI0SIkGN2Mg5n4beaFQZ4fZisrRsPpeTq5IPRfv1MzR3EtrGSl30q2AjFwBw";
+const BOOT='lumegarceau@gmail.com';
+const fb=initializeApp(CFG),auth=getAuth(fb);
+let db;try{db=initializeFirestore(fb,{localCache:persistentLocalCache()})}catch(e){db=initializeFirestore(fb,{})}
+
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const P=[
+ {id:'cobos',n:'Cobos',c:'COBOS',r:'jefe',cargo:'Jefe'},{id:'antonio',n:'Antonio',c:'ANTONIO',r:'jefe',cargo:'Subjefe'},{id:'gonzalo',n:'Gonzalo',c:'GONZALO',r:'jefe',cargo:'Subjefe'},
+ {id:'myriam',n:'Myriam',c:'MYRIAM'},{id:'ale',n:'Ale',c:'ALE'},{id:'luis',n:'Luis',c:'LUIS'},{id:'fran',n:'Fran',c:'FRAN'},{id:'escobar',n:'Escobar',c:'ESCOBAR'},
+ {id:'julian',n:'Julián',c:'JULI'},{id:'jc',n:'José Carlos',c:'JC'},{id:'elena',n:'Elena',c:'ELENA'},{id:'maqueda',n:'Maqueda',c:'MAQUEDA'},{id:'carballo',n:'Carballo',c:'CARBALLO'},{id:'laura',n:'Laura',c:'LAURA'}
+].map(p=>({r:'basica',cargo:'Escala básica',...p}));
+const PID=Object.fromEntries(P.map(p=>[p.id,p]));
+const T1430=new Set(['ale','elena','escobar','maqueda','myriam']);
+const TARDES={1:['jc','elena','luis'],2:['ale','luis','escobar','maqueda'],3:['fran','julian','laura'],4:['carballo']};
+const GR={A:['julian','escobar','laura','carballo'],B:['myriam','ale','maqueda','fran'],C:['luis','elena','jc']};
+const COD=[['LG','Libre compensación guardia'],['Ap','Asuntos propios'],['Vac','Vacaciones'],['SS','Permiso Semana Santa'],['Nav','Permiso Navidad'],['Cur','Curso'],['Op','Licencia operación / op. familiar'],['B','Baja'],['In','Inasistencia'],['OT','Otros']];
+const MES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+const mes3=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const DIA=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const add=(d,k)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+k);
+const corta=s=>{const d=parse(s);return d.getDate()+' '+mes3[d.getMonth()]};
+const larga=s=>{const d=parse(s);return DIA[d.getDay()]+' '+d.getDate()+' de '+MES[d.getMonth()].toLowerCase()+' '+d.getFullYear()};
+const ms=t=>t?.toMillis?t.toMillis():(typeof t==='number'?t:0);
+
+/* ---------- estado ---------- */
+let me=null,email='',yo=null,plantilla=null,iniciado=false,subs=[];
+const T={};
+let cfgF={extra:{},quitar:[]},cfgC={over:{}};
+const notas={};let juicios=[],cambios=[],prefs=[],perfil={modo:'ambos'},nuevos=0;
+let tab='cuadrante';try{tab=localStorage.getItem('cq-tab')||'cuadrante'}catch(e){}
+let cur=new Date();cur=new Date(cur.getFullYear(),cur.getMonth(),1);
+let unsubMes=null,selDia=null,editP=null,editJ=null,fotoNueva=null,statsShown=false;
+const JEFES=['cobos','antonio','gonzalo'];
+const esJefe=()=>JEFES.includes(yo), esBas=()=>yo&&PID[yo].r==='basica';
+const esAdmin=()=>esJefe()||!!plantilla?.admins?.includes(email);
+
+/* ---------- festivos ---------- */
+function pascua(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da)}
+const FC={};
+function festAnio(y){if(FC[y])return FC[y];const f={},e=pascua(y);
+ [[-3,'Jueves Santo'],[-2,'Viernes Santo'],[17,'Miércoles de Feria (Sevilla)'],[60,'Corpus Christi (Sevilla)']].forEach(([k,n])=>f[iso(add(e,k))]=n);
+ [['01-01','Año Nuevo'],['01-06','Reyes'],['02-28','Día de Andalucía'],['05-01','Fiesta del Trabajo'],['08-15','Asunción'],['10-02','Santos Ángeles Custodios'],['10-12','Fiesta Nacional'],['11-01','Todos los Santos'],['12-06','Día de la Constitución'],['12-08','Inmaculada'],['12-24','Nochebuena',1],['12-25','Navidad'],['12-31','Nochevieja',1]].forEach(([md,n,fijo])=>{
+  let d=parse(y+'-'+md);if(d.getDay()===0&&!fijo){d=add(d,1);n+=' (trasladado del domingo)';while(f[iso(d)])d=add(d,1)}f[iso(d)]=f[iso(d)]||n});
+ return FC[y]=f}
+function festivo(s){if(cfgF.quitar?.includes(s))return null;return cfgF.extra?.[s]||festAnio(+s.slice(0,4))[s]||null}
+function laborable(s){const w=parse(s).getDay();return w>0&&w<6&&!festivo(s)}
+
+/* ---------- grupos ---------- */
+const REF=Date.UTC(2026,10,30);
+const lunes=s=>{const d=parse(s);return iso(add(d,-((d.getDay()+6)%7)))};
+function grupo(s){const l=lunes(s);if(cfgC.over?.[l])return cfgC.over[l];const d=parse(l);const k=Math.round((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-REF)/6048e5);return['B','C','A'][((k%3)+3)%3]}
+function etiquetaSemana(l){const d=parse(l),out=new Set();for(let i=0;i<7;i++){const s=iso(add(d,i)),md=s.slice(5),n=festivo(s)||'';
+ if(md==='12-06'||md==='12-08')out.add('Puente Constitución');if(['12-24','12-25','12-31','01-01','01-06'].includes(md))out.add('Navidad');
+ if(n.startsWith('Jueves Santo'))out.add('Semana Santa');if(n.startsWith('Miércoles de Feria'))out.add('Feria')}return[...out].join(' · ')}
+
+/* ---------- turno efectivo ---------- */
+const horaDef=(id,t)=>t==='M'?(id==='julian'?'06:30':'08:00'):t==='T'?(T1430.has(id)?'14:30':'15:00'):'';
+function base(s,id,st){if(!laborable(s))return'-';if(PID[id].r!=='basica')return'M';const d=parse(s),w=d.getDay();
+ if(w===5)return[1,2].some(k=>st[iso(add(d,k))+'|'+id]?.tipo==='G')?'T':'M';return(TARDES[w]||[]).includes(id)?'T':'M'}
+function ef(s,id,st=T){const o=st[s+'|'+id]||{},b=base(s,id,st),tipo=o.tipo||b;return{tipo,base:b,codigo:o.codigo||'',hora:(tipo==='M'||tipo==='T')?(o.hora||horaDef(id,tipo)):'',juicio:!!o.juicio,juicioTxt:o.juicioTxt||'',explicit:!!st[s+'|'+id]}}
+const nombreTipo={M:'Mañana',T:'Tarde',L:'Libre',G:'Trabaja','-':'No trabaja'};
+function describe(e){let t=e.tipo==='L'?'Libre ('+e.codigo+')':nombreTipo[e.tipo]+(e.hora?' '+e.hora:'');if(e.juicio)t+=' · juicio';return t}
+function dia(s,st=T){const r={M:[],T:[],G:[],L:[],J:[],H:[],w:[],cob:null},lab=laborable(s);
+ for(const p of P){const e=ef(s,p.id,st),x={id:p.id,...e};
+  if(e.tipo==='L')r.L.push(x);else if(e.tipo==='M')r.M.push(x);else if(e.tipo==='T')r.T.push(x);else if(e.tipo==='G')r.G.push(x);
+  if(e.juicio)r.J.push(x);
+  if((e.tipo==='M'||e.tipo==='T')&&e.hora!==horaDef(p.id,e.tipo))r.H.push(x)}
+ r.T.sort((a,b)=>a.hora.localeCompare(b.hora));r.M.sort((a,b)=>a.hora.localeCompare(b.hora)||(PID[a.id].r==='jefe')-(PID[b.id].r==='jefe'));
+ if(lab){const B=x=>PID[x.id].r==='basica',tb=r.T.filter(B);
+  if(!r.M.some(x=>B(x)&&!x.juicio&&x.hora==='08:00'))r.w.push('Ningún funcionario de básica entra a las 8:00');
+  if(!tb.some(x=>x.hora==='14:30'))r.w.push('Nadie de básica entra a las 14:30');
+  if(!tb.some(x=>x.hora==='15:00'))r.w.push('Nadie de básica entra a las 15:00');
+  if(tb.length<2){r.w.push(tb.length?'Solo hay 1 funcionario de tarde (mínimo 2)':'No hay nadie de tarde (mínimo 2)');const g=grupo(s);r.cob={g,disp:GR[g].filter(id=>{const e=ef(s,id,st);return e.tipo==='M'&&!e.juicio})}}}
+ return r}
+
+/* ---------- utilidades UI ---------- */
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),5000)}
+function status(m,err){const s=$('#st');s.textContent=m||'';s.className='status'+(err?' err':'')}
+const warnSvg='<svg class="warn" viewBox="0 0 16 16" aria-label="Faltan mínimos"><path d="M8 1 15 14H1z" fill="var(--red)"/><path d="M8 6v4M8 11.6v.6" stroke="#fff" stroke-width="1.6"/></svg>';
+const fail=e=>{console.error(e);toast(e?.code==='permission-denied'?'No tienes permiso para guardar eso.':'No se pudo guardar. Revisa la conexión e inténtalo de nuevo.')};
+
+/* ---------- pestañas ---------- */
+function tabsHTML(){const t=[['cuadrante','Cuadrante'],['juicios','Juicios'],['estad','Estadística']];if(esBas())t.push(['basica','Básica']);if(esJefe())t.push(['jefes','Jefes']);if(esAdmin())t.push(['plantilla','Plantilla']);
+ if(!t.some(x=>x[0]===tab))tab='cuadrante';
+ $('#tabs').innerHTML=t.map(([k,n])=>`<button data-tab="${k}" class="${k===tab?'on':''}">${n}${k==='jefes'&&nuevos?`<span class="badge">${nuevos}</span>`:''}</button>`).join('');
+ for(const s of $$('main>section'))s.hidden=s.id!=='t-'+tab}
+function render(){if(!yo)return;tabsHTML();
+ $('#me').innerHTML=`<b>${esc(PID[yo].n)}</b> · ${esc(PID[yo].cargo)}`;
+ if(tab==='cuadrante')renderCal();if(tab==='juicios')renderJuicios();if(tab==='estad'&&!statsShown){statsShown=true;calcStats()}if(tab==='basica')renderBasica();if(tab==='jefes')renderJefes();if(tab==='plantilla')renderPlantilla();
+ if(selDia)renderInfo()}
+
+/* ---------- cuadrante ---------- */
+function renderCal(){const y=cur.getFullYear(),m=cur.getMonth();$('#mtit').textContent=MES[m]+' '+y;
+ const off=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate(),hoy=iso(new Date()),nar=matchMedia('(max-width:700px)').matches;
+ let h=(nar?['LUN','MAR','MIÉ','JUE','VIE','SÁB','DOM']:['LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES','SÁBADO','DOMINGO']).map(d=>`<div class="h">${d}</div>`).join('');
+ for(let i=0;i<off;i++)h+='<div class="c x"></div>';
+ for(let d=1;d<=n;d++){const s=iso(new Date(y,m,d)),w=new Date(y,m,d).getDay(),lab=laborable(s),f=festivo(s),r=dia(s);
+  const who=(lab?r.T:r.G).map(x=>`<span>${PID[x.id].c}</span>`).join('');
+  const sub=lab?[...r.L.map(x=>PID[x.id].c+' ('+x.codigo+')'),...r.J.map(x=>PID[x.id].c+' (JUICIO)'),...r.H.map(x=>PID[x.id].c+' '+x.hora)].join(' · '):r.L.map(x=>PID[x.id].c+' ('+x.codigo+')').join(' · ');
+  h+=`<button class="c${f?' fest':''}${!f&&(w===0||w===6)?' finde':''}${s===hoy?' hoy':''}" data-dia="${s}" aria-label="${esc(larga(s))}"><div class="top"><span class="n">${pad(d)}</span><span class="fl">${notas[s]?'<i class="dot"></i>':''}${lab&&r.w.length?warnSvg:''}</span></div><div class="who">${who}</div><div class="sub">${esc(sub)}</div></button>`}
+ const tot=off+n;for(let i=tot;i<Math.ceil(tot/7)*7;i++)h+='<div class="c x"></div>';
+ $('#cal').innerHTML=h}
+
+function filas(lista,fn){return lista.length?lista.map(fn).join(''):'<div class="empty">Nadie</div>'}
+function renderInfo(){const s=selDia,r=dia(s),lab=laborable(s),f=festivo(s),g=grupo(s);
+ const fila=x=>`<div class="row"><span class="t">${x.hora||'—'}</span><span><span class="nm">${esc(PID[x.id].n)}</span>${x.juicio?` <span class="tag red">Juicio${x.juicioTxt?' · '+esc(x.juicioTxt):''}</span>`:''}${x.explicit&&x.tipo!==x.base?' <span class="ds">· cambiado</span>':''}</span><span class="ds">${PID[x.id].r==='jefe'?esc(PID[x.id].cargo):''}</span></div>`;
+ let h=`<div class="shh"><div><h3 id="dtit">${esc(larga(s))}</h3>${f?`<span class="tag red">${esc(f)}</span>`:''}<span class="tag">Refuerzo de tardes: grupo ${g}</span></div><button class="x-btn" data-close aria-label="Cerrar">×</button></div>`;
+ if(lab&&r.w.length)h+=`<div class="alert"><b>Faltan mínimos</b><ul>${r.w.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>${r.cob?`<p style="margin:6px 0 0">Cubre el <b>grupo ${r.cob.g}</b>. Disponibles: ${r.cob.disp.length?r.cob.disp.map(id=>esc(PID[id].n)).join(', '):'nadie del grupo'}.</p>`:''}</div>`;
+ if(lab)h+=`<h4>MAÑANA</h4>${filas(r.M,fila)}<h4>TARDE</h4>${filas(r.T,fila)}`;
+ else h+=`<h4>TRABAJAN</h4>${filas(r.G,fila)}`;
+ if(r.J.length)h+=`<h4>JUICIO</h4>${filas(r.J,x=>`<div class="row"><span class="t">${esc(x.juicioTxt.match(/\d{1,2}:\d{2}/)?.[0]||'—')}</span><span class="nm">${esc(PID[x.id].n)} <span class="ds">${esc(x.juicioTxt)}</span></span><span class="ds">${nombreTipo[x.tipo]}</span></div>`)}`;
+ h+=`<h4>LIBRES</h4>${filas(r.L,x=>`<div class="row"><span class="t">${esc(x.codigo)}</span><span class="nm">${esc(PID[x.id].n)}</span><span class="ds">${esc(COD.find(c=>c[0]===x.codigo)?.[1]||'')}</span></div>`)}`;
+ $('#dinfo').innerHTML=h}
+
+function renderEditor(){const s=selDia,lab=laborable(s),id=editP,o=T[s+'|'+id]||{},b=base(s,id,T),e=ef(s,id);
+ const opts=(lab?[['M','Mañana'],['T','Tarde'],['L','Libre']]:[['G','Trabaja'],['L','Libre']]).map(([k,n])=>`<option value="${k}"${o.tipo===k?' selected':''}>${n}</option>`).join('');
+ const quien=esJefe()?`<label>Funcionario<select id="ed-p">${P.map(p=>`<option value="${p.id}"${p.id===id?' selected':''}>${esc(p.n)}</option>`).join('')}</select></label>`:'';
+ $('#ded').innerHTML=`<div class="card"><h4 style="margin-top:0">${id===yo?'MI DÍA':'CAMBIAR A '+esc(PID[id].n.toUpperCase())}</h4><div class="form">${quien}
+ <label>Turno<select id="ed-t"><option value="">Según cuadrante (${nombreTipo[b]})</option>${opts}</select></label>
+ <label id="w-cod" class="${o.tipo==='L'?'':'hid'}">Motivo<select id="ed-c"><option value="">Elige…</option>${COD.map(([k,n])=>`<option value="${k}"${o.codigo===k?' selected':''}>${k} — ${n}</option>`).join('')}</select></label>
+ <label id="w-h" class="${(e.tipo==='M'||e.tipo==='T')?'':'hid'}">Hora de entrada<input type="time" id="ed-h" value="${esc(o.hora||'')}"><span class="note">En blanco: hora habitual (${horaDef(id,e.tipo)||'—'})</span></label>
+ <label class="chk"><input type="checkbox" id="ed-j"${o.juicio?' checked':''}>Tiene juicio</label>
+ <label id="w-j" class="${o.juicio?'':'hid'}">Detalle del juicio<input type="text" id="ed-jt" value="${esc(o.juicioTxt||'')}" placeholder="p. ej. 10:00 Penal 4"></label>
+ <div class="acts"><button class="btn" id="ed-save">Guardar</button>${e.explicit?'<button class="btn sec" id="ed-reset">Volver a lo previsto</button>':''}</div></div></div>
+ <div class="card"><h4 style="margin-top:0">MI NOTA (solo la ves tú)</h4><textarea id="nota">${esc(notas[s]||'')}</textarea><div class="acts" style="margin-top:8px"><button class="btn sec" id="nota-save">Guardar nota</button></div></div>`}
+function abrirDia(s){selDia=s;editP=yo;renderInfo();renderEditor();$('#ov').classList.add('on');$('#ov .sh').scrollTop=0}
+function cerrar(){$('#ov').classList.remove('on');selDia=null}
+
+async function guardarTurno(s,id,nuevo){const k=s+'|'+id,antes=describe(ef(s,id)),prev=T[k];
+ if(nuevo)T[k]={fecha:s,persona:id,...nuevo,por:yo,ts:Date.now()};else delete T[k];
+ const despues=describe(ef(s,id));render();
+ try{const ref=doc(db,'turnos',s+'_'+id);if(nuevo)await setDoc(ref,T[k]);else await deleteDoc(ref);
+  if(antes!==despues)await addDoc(collection(db,'cambios'),{ts:serverTimestamp(),fecha:s,persona:id,autor:yo,antes,despues});return true}
+ catch(e){if(prev)T[k]=prev;else delete T[k];render();fail(e);return false}}
+
+/* ---------- juicios ---------- */
+function jform(){const f=$('#jf'),fu=f.lugar.value==='Fuera',web=fu&&f.mod.value==='WebEx';
+ $('#w-mod').classList.toggle('hid',!fu);$('#w-web').classList.toggle('hid',!web);
+ $('#l-sala').textContent=f.jur.value==='Penal'?'Juzgado de lo Penal (nº)':'Sección de la Audiencia'}
+function renderJuicios(){const sel=$('#jcit'),v=sel.value;sel.innerHTML='<option value="">Nadie más</option>'+P.filter(p=>p.id!==yo).map(p=>`<option value="${p.id}">${esc(p.n)}</option>`).join('');sel.value=v;jform();
+ const hoy=iso(new Date()),l=[...juicios].sort((a,b)=>(a.fecha||'9').localeCompare(b.fecha||'9')||(a.hora||'').localeCompare(b.hora||''));
+ $('#jlist').innerHTML=l.length?l.map(j=>{const lug=j.lugar==='Fuera'?'Fuera · '+j.mod+(j.mod==='WebEx'?` (${j.sol?'solicitada':'sin solicitar'}${j.con?', concedida':''})`:''):'Sevilla';
+  return`<div class="it" style="${j.fecha&&j.fecha<hoy?'opacity:.6':''}"><div class="t">${j.fecha?esc(corta(j.fecha)):'Sin fecha'}<small>${esc(j.hora||'')}</small></div><div>
+  <p><b>${esc(j.jur)}${j.sala?' · '+esc(j.sala):''}</b> — ${esc(lug)}</p>
+  ${j.proc?`<p>Procedimiento: ${esc(j.proc)}</p>`:''}${j.inf?`<p>Informe nº ${esc(j.inf)}</p>`:''}${j.citado?`<p>También citado: ${esc(PID[j.citado]?.n)}</p>`:''}
+  <div id="fx-${j.id}"></div><div class="acts" style="margin-top:6px">${j.foto?`<button class="btn sec sm" data-vfoto="${j.id}">Ver foto</button>`:''}<button class="btn sec sm" data-ej="${j.id}">Editar</button><button class="btn dan sm" data-bj="${j.id}">Borrar</button></div></div></div>`}).join(''):'<div class="empty">Aún no has subido juicios.</div>'}
+function resetJ(){editJ=null;fotoNueva=null;$('#jf').reset();$('#jprev').classList.add('hid');$('#jtit').textContent='Nuevo juicio';$('#jcancel').classList.add('hid');jform()}
+function comprimir(file){return new Promise((ok,ko)=>{const img=new Image(),u=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,1200/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);let q=.75,d=c.toDataURL('image/jpeg',q);while(d.length>700000&&q>.3){q-=.1;d=c.toDataURL('image/jpeg',q)}URL.revokeObjectURL(u);ok(d)};img.onerror=ko;img.src=u})}
+const priv=id=>doc(db,'usuarios',me.uid,'privado',id);
+
+/* ---------- estadística ---------- */
+let statTok=0;
+async function calcStats(){const y=+$('#sy').value,m=$('#sm').value,tok=++statTok;
+ let a=m===''?new Date(y,0,1):new Date(y,+m,1),b=m===''?new Date(y,11,31):new Date(y,+m+1,0);
+ if($('#shoy').checked){const h=new Date();h.setHours(0,0,0,0);if(h<b)b=h}
+ if(b<a){$('#stab').innerHTML='';$('#snote').textContent='Ese periodo aún no ha empezado.';return}
+ $('#snote').textContent='Calculando…';const st={};
+ try{const sn=await getDocs(query(collection(db,'turnos'),where('fecha','>=',iso(a)),where('fecha','<=',iso(add(b,2)))));sn.docs.forEach(d=>{const x=d.data();st[x.fecha+'|'+x.persona]=x})}catch(e){$('#snote').textContent='No se pudieron leer los datos.';return}
+ if(tok!==statTok)return;
+ const cols=['M','T','G','J',...COD.map(c=>c[0]),'VT','VF'],cnt=Object.fromEntries(P.map(p=>[p.id,Object.fromEntries(cols.map(c=>[c,0]))]));
+ for(let d=a;d<=b;d=add(d,1)){const s=iso(d),lab=laborable(s),vis=lab&&!!festivo(iso(add(d,1))),vie=lab&&d.getDay()===5;
+  for(const p of P){const e=ef(s,p.id,st),c=cnt[p.id];
+   if(lab){if(e.tipo==='M')c.M++;if(e.tipo==='T'){c.T++;if(vie)c.VT++;if(vis)c.VF++}if(e.tipo==='L'&&c[e.codigo]!=null)c[e.codigo]++}
+   else if(e.tipo==='G')c.G++;
+   if(e.juicio)c.J++}}
+ const head={M:'Mañana',T:'Tarde',G:'Finde/ fest.',J:'Juicio',VT:'Vie. tarde',VF:'Víspera fest.'};
+ $('#stab').innerHTML=`<thead><tr><th>Funcionario</th>${cols.map(c=>`<th>${head[c]||c}</th>`).join('')}</tr></thead><tbody>${P.map(p=>`<tr><td>${esc(p.n)}</td>${cols.map(c=>`<td class="${cnt[p.id][c]?'':'z'}">${cnt[p.id][c]}</td>`).join('')}</tr>`).join('')}</tbody>`;
+ $('#snote').textContent=`Del ${corta(iso(a))} al ${corta(iso(b))} de ${y}.`}
+
+/* ---------- básica ---------- */
+function renderBasica(){const R=[['23-24','A','B','C'],['24-25','B','C','A'],['25-26','C','A','B'],['26-27','A','B','C']];
+ $('#rot').innerHTML='<thead><tr><th>Año</th><th>Puente Constitución + 1ª sem. Navidad</th><th>Semana Santa + 2ª sem. Navidad</th><th>Feria + 3ª sem. Navidad</th></tr></thead><tbody>'+R.map(r=>`<tr><td>${r[0]}</td><td>Grupo ${r[1]}</td><td>Grupo ${r[2]}</td><td>Grupo ${r[3]}</td></tr>`).join('')+'</tbody>';
+ $('#plist').innerHTML=prefs.length?[...prefs].sort((a,b)=>a.per.localeCompare(b.per)||ms(b.ts)-ms(a.ts)).map(p=>`<div class="it"><div class="t">${esc(p.per)}<small>${esc(p.cuando||'')}</small></div><div><p><b>${esc(PID[p.autor]?.n||'')}</b>: ${esc(p.txt)}</p>${p.autor===yo?`<button class="btn dan sm" data-bp="${p.id}">Borrar</button>`:''}</div></div>`).join(''):'<div class="empty">Sin preferencias todavía.</div>'}
+
+/* ---------- jefes ---------- */
+function linea(c){const d=new Date(ms(c.ts)||Date.now());return`<div class="it"><div class="t">${esc(corta(c.fecha))}<small>${d.getDate()} ${mes3[d.getMonth()]} ${pad(d.getHours())}:${pad(d.getMinutes())}</small></div><div><p><b>${esc(PID[c.persona]?.n)}</b>${c.autor!==c.persona?` <span class="note">(cambiado por ${esc(PID[c.autor]?.n)})</span>`:''}</p><p>${esc(c.antes)} → <b>${esc(c.despues)}</b></p></div></div>`}
+function renderJefes(){$$('#modo input').forEach(i=>i.checked=i.value===perfil.modo);
+ const lf=$('#lf'),v=lf.value;lf.innerHTML='<option value="">Todos</option>'+P.map(p=>`<option value="${p.id}">${esc(p.n)}</option>`).join('');lf.value=v;
+ const l=cambios.filter(c=>!v||c.persona===v);$('#log').innerHTML=l.length?l.slice(0,150).map(linea).join(''):'<div class="empty">Sin cambios registrados.</div>';
+ if(nuevos){nuevos=0;tabsHTML()}
+ $('#notifst').textContent=perfil.tokens?.length?`Avisos activados en ${perfil.tokens.length} dispositivo${perfil.tokens.length>1?'s':''}.`:'Aún no has activado los avisos en ningún dispositivo.';
+ const l0=parse(lunes(iso(cur)));let h='';for(let i=0;i<14;i++){const l=iso(add(l0,7*i)),g=grupo(l),o=cfgC.over?.[l],et=etiquetaSemana(l);
+  h+=`<div class="wk"><span>${esc(corta(l))} – ${esc(corta(iso(add(parse(l),6))))}${et?`<small>${esc(et)}</small>`:''}</span><select data-cad="${l}" aria-label="Grupo"><option value="">Auto (${o?'—':g})</option>${['A','B','C'].map(x=>`<option${o===x?' selected':''}>${x}</option>`).join('')}</select></div>`}
+ $('#cad').innerHTML=h;
+ const y=cur.getFullYear(),fl={...festAnio(y),...Object.fromEntries(Object.entries(cfgF.extra||{}).filter(([k])=>k.startsWith(y)))};
+ $('#fest').innerHTML=`<p class="note" style="margin:0 0 6px">Año ${y}</p>`+Object.keys(fl).sort().map(k=>{const q=cfgF.quitar?.includes(k);return`<div class="wk"><span style="${q?'text-decoration:line-through;color:var(--mute)':''}">${esc(corta(k))} · ${esc(fl[k])}${cfgF.extra?.[k]?' <small>añadido</small>':''}</span><button class="btn sec sm" data-fq="${k}">${q?'Restaurar':'Quitar'}</button></div>`}).join('')}
+
+/* ---------- plantilla ---------- */
+function renderPlantilla(){const em=plantilla?.emails||{},porP={};for(const[e,p]of Object.entries(em))(porP[p]=porP[p]||[]).push(e);
+ $('#plan').innerHTML=P.map(p=>{const e=(porP[p.id]||[])[0]||'';return`<div class="form" style="padding:10px 0;border-bottom:1px solid var(--line)"><label>${esc(p.n)} <span class="note">${esc(p.cargo)}</span><input type="email" data-pe="${p.id}" value="${esc(e)}" placeholder="correo@ejemplo.com" autocomplete="off"></label>
+ ${p.r!=='jefe'?`<label class="chk"><input type="checkbox" data-adm="${p.id}"${e&&plantilla?.admins?.includes(e)?' checked':''}${e?'':' disabled'}>Administrador (puede editar esta lista, festivos y grupos)</label>`:''}</div>`}).join('')+'<div class="acts" style="margin-top:12px"><button class="btn" id="plan-save">Guardar plantilla</button></div>'}
+
+/* ---------- informe y avisos ---------- */
+function informe(prev){const l=cambios.filter(c=>ms(c.ts)>prev&&c.autor!==yo);
+ if(l.length&&perfil.modo!=='inmediata'){$('#m2').innerHTML=`<div class="shh"><h3>Cambios desde tu última visita</h3><button class="x-btn" data-close2 aria-label="Cerrar">×</button></div><p class="note">${l.length} cambio${l.length>1?'s':''}</p><div class="list log">${l.map(linea).join('')}</div>`;$('#ov2').classList.add('on')}}
+async function activarAvisos(){const st=$('#notifst');
+ try{if(!(await isSupported())||!('serviceWorker' in navigator)){st.textContent='Este navegador no admite avisos. En iPhone, primero añade la app a la pantalla de inicio desde Safari (Compartir → Añadir a pantalla de inicio) y ábrela desde ahí.';return}
+  const perm=await Notification.requestPermission();if(perm!=='granted'){st.textContent='Has bloqueado los avisos. Actívalos en los ajustes del navegador para esta web.';return}
+  st.textContent='Activando…';const reg=await navigator.serviceWorker.register('./firebase-messaging-sw.js',{scope:'./'});await navigator.serviceWorker.ready;
+  const tok=await getToken(getMessaging(fb),{vapidKey:VAPID,serviceWorkerRegistration:reg});
+  if(!tok){st.textContent='No se pudo activar. Inténtalo otra vez.';return}
+  await updateDoc(doc(db,'usuarios',me.uid),{tokens:arrayUnion(tok)});perfil.tokens=[...new Set([...(perfil.tokens||[]),tok])];toast('Avisos activados en este móvil');renderJefes()}
+ catch(e){console.error(e);st.textContent='No se pudo activar los avisos: '+(e.message||e)}}
+
+/* ---------- datos ---------- */
+function subMes(){unsubMes?.();const y=cur.getFullYear(),m=cur.getMonth(),a=iso(new Date(y,m,-7)),b=iso(new Date(y,m+1,8));
+ unsubMes=onSnapshot(query(collection(db,'turnos'),where('fecha','>=',a),where('fecha','<=',b)),sn=>{status('');
+  for(const k of Object.keys(T)){const f=k.slice(0,10);if(f>=a&&f<=b)delete T[k]}sn.docs.forEach(d=>{const x=d.data();if(x?.fecha&&x?.persona)T[x.fecha+'|'+x.persona]=x});if(tab==='cuadrante')renderCal();if(selDia)renderInfo()},e=>status('Error al leer el cuadrante.',1))}
+async function arrancar(){if(iniciado)return;iniciado=true;$('#auth').hidden=true;status('Cargando…');
+ const uref=doc(db,'usuarios',me.uid);let prev=0;
+ try{const u=await getDoc(uref);if(u.exists()){perfil={...perfil,...u.data()};prev=ms(perfil.ultimaVisita)}
+  await setDoc(uref,{persona:yo,email,modo:perfil.modo||'ambos',ultimaVisita:serverTimestamp()},{merge:true})}catch(e){console.error(e)}
+ render();subMes();
+ subs.push(onSnapshot(doc(db,'config','festivos'),d=>{cfgF={extra:{},quitar:[],...(d.data()||{})};render()},()=>{}));
+ subs.push(onSnapshot(doc(db,'config','cadencia'),d=>{cfgC={over:{},...(d.data()||{})};render()},()=>{}));
+ const pc=collection(db,'usuarios',me.uid,'privado');
+ subs.push(onSnapshot(query(pc,where('tipo','==','nota')),sn=>{for(const k in notas)delete notas[k];sn.docs.forEach(d=>{const x=d.data();notas[x.fecha]=x.texto});if(tab==='cuadrante')renderCal()},()=>{}));
+ subs.push(onSnapshot(query(pc,where('tipo','==','juicio')),sn=>{juicios=sn.docs.map(d=>({id:d.id,...d.data()}));if(tab==='juicios')renderJuicios()},()=>{}));
+ if(esBas())subs.push(onSnapshot(collection(db,'basica'),sn=>{prefs=sn.docs.map(d=>({id:d.id,...d.data({serverTimestamps:'estimate'})}));if(tab==='basica')renderBasica()},()=>{}));
+ if(esJefe()){let first=true;const t0=Date.now();
+  subs.push(onSnapshot(query(collection(db,'cambios'),orderBy('ts','desc'),limit(400)),sn=>{cambios=sn.docs.map(d=>({id:d.id,...d.data({serverTimestamps:'estimate'})}));
+   if(first){first=false;informe(prev)}
+   else for(const ch of sn.docChanges()){const c=ch.doc.data({serverTimestamps:'estimate'});if(ch.type==='added'&&ms(c.ts)>t0&&c.autor!==yo){if(tab!=='jefes')nuevos++;if(perfil.modo!=='informe')toast(`${PID[c.persona]?.n} · ${corta(c.fecha)}: ${c.antes} → ${c.despues}`)}}
+   if(tab==='jefes')renderJefes();else tabsHTML()},()=>{}))}}
+
+/* ---------- acceso ---------- */
+const box=h=>{$('#authbox').innerHTML=h;$('#auth').hidden=false};
+const errTxt=e=>({'auth/invalid-credential':'Correo o contraseña incorrectos.','auth/wrong-password':'Contraseña incorrecta.','auth/user-not-found':'No hay ninguna cuenta con ese correo. Pulsa «Crear mi cuenta».','auth/email-already-in-use':'Ese correo ya tiene cuenta. Pulsa «Ya tengo cuenta» y entra.','auth/weak-password':'La contraseña debe tener al menos 6 caracteres.','auth/invalid-email':'El correo no es válido.','auth/too-many-requests':'Demasiados intentos. Espera unos minutos.','auth/network-request-failed':'Sin conexión.'}[e.code]||'Error: '+(e.message||e));
+function pantallaLogin(modo='entrar'){box(`<h2>CUADRANTE</h2><p>${modo==='entrar'?'Entra con tu correo. La sesión se queda abierta.':'Crea tu cuenta con el correo que has dado a tu jefe.'}</p>
+ <form id="lf-auth" class="form"><label>Correo<input type="email" id="a-em" autocomplete="email" required></label><label>Contraseña<input type="password" id="a-pw" autocomplete="${modo==='entrar'?'current-password':'new-password'}" required minlength="6"></label>
+ <p class="err" id="a-err"></p><button class="btn" type="submit">${modo==='entrar'?'Entrar':'Crear mi cuenta'}</button></form>
+ <button class="linkb" data-amodo="${modo==='entrar'?'crear':'entrar'}">${modo==='entrar'?'Es mi primera vez: crear mi cuenta':'Ya tengo cuenta: entrar'}</button><br>
+ ${modo==='entrar'?'<button class="linkb" id="a-olv">He olvidado la contraseña</button>':''}`);
+ $('#lf-auth').onsubmit=async ev=>{ev.preventDefault();const em=$('#a-em').value.trim().toLowerCase(),pw=$('#a-pw').value;$('#a-err').textContent='';
+  try{if(modo==='entrar')await signInWithEmailAndPassword(auth,em,pw);else{const c=await createUserWithEmailAndPassword(auth,em,pw);await sendEmailVerification(c.user)}}catch(e){$('#a-err').textContent=errTxt(e)}};
+ const o=$('#a-olv');if(o)o.onclick=async()=>{const em=$('#a-em').value.trim();if(!em){$('#a-err').textContent='Escribe primero tu correo.';return}try{await sendPasswordResetEmail(auth,em);$('#a-err').textContent='Te hemos enviado un correo para cambiar la contraseña (mira también en spam).'}catch(e){$('#a-err').textContent=errTxt(e)}}}
+function pantallaVerificar(){box(`<h2>Revisa tu correo</h2><p>Te hemos enviado un enlace a <b>${esc(me.email)}</b>. Púlsalo para confirmar que el correo es tuyo (si no lo ves, mira en spam) y vuelve aquí.</p>
+ <div class="acts"><button class="btn" id="v-ok">Ya lo he confirmado</button><button class="btn sec" id="v-re">Reenviar correo</button></div><p class="err" id="v-err"></p><button class="linkb" data-salir>Usar otro correo</button>`);
+ $('#v-ok').onclick=async()=>{await me.reload();if(me.emailVerified){await me.getIdToken(true);entrar(me)}else $('#v-err').textContent='Todavía no consta como confirmado. Pulsa el enlace del correo.'};
+ $('#v-re').onclick=async()=>{try{await sendEmailVerification(me);$('#v-err').textContent='Correo reenviado.'}catch(e){$('#v-err').textContent=errTxt(e)}}}
+function pantallaNoAutorizado(){box(`<h2>Correo no autorizado</h2><p>El correo <b>${esc(email)}</b> todavía no está en la plantilla. Pide a un jefe o a un administrador que lo añada en la pestaña «Plantilla» y vuelve a entrar.</p><div class="acts"><button class="btn" id="r-again">Volver a comprobar</button><button class="btn sec" data-salir>Cerrar sesión</button></div>`);$('#r-again').onclick=()=>entrar(me)}
+
+let unsubPlan=null;
+function entrar(u){me=u;email=(u.email||'').toLowerCase();
+ if(!u.emailVerified){pantallaVerificar();return}
+ unsubPlan?.();
+ unsubPlan=onSnapshot(doc(db,'config','plantilla'),async d=>{
+  if(!d.exists()){if(email===BOOT){try{await setDoc(doc(db,'config','plantilla'),{emails:{[BOOT]:'luis'},admins:[BOOT]})}catch(e){console.error(e)}}else pantallaNoAutorizado();return}
+  plantilla=d.data();const p=plantilla.emails?.[email];
+  if(!p||!PID[p]){pantallaNoAutorizado();return}
+  if(yo&&yo!==p){location.reload();return}
+  yo=p;arrancar();if(tab==='plantilla')renderPlantilla();tabsHTML()},
+  e=>{console.error(e);pantallaNoAutorizado()})}
+onAuthStateChanged(auth,u=>{if(!u){me=null;yo=null;subs.forEach(f=>f());subs=[];unsubMes?.();unsubPlan?.();iniciado=false;pantallaLogin();return}entrar(u)});
+
+/* ---------- eventos ---------- */
+document.addEventListener('click',async ev=>{const t=ev.target.closest('button');if(!t)return;const d=t.dataset;
+ if(d.amodo){pantallaLogin(d.amodo);return}
+ if('salir' in d||t.id==='salir'){await signOut(auth);location.reload();return}
+ if(d.tab){tab=d.tab;statsShown=false;try{localStorage.setItem('cq-tab',tab)}catch(e){}render();return}
+ if(d.dia){abrirDia(d.dia);return}
+ if('close' in d){cerrar();return}
+ if('close2' in d){$('#ov2').classList.remove('on');return}
+ if(t.id==='prev'||t.id==='next'){cur=new Date(cur.getFullYear(),cur.getMonth()+(t.id==='next'?1:-1),1);subMes();render();return}
+ if(t.id==='hoy'){const h=new Date();cur=new Date(h.getFullYear(),h.getMonth(),1);subMes();render();return}
+ if(t.id==='ed-save'){const s=selDia,id=editP,tipo=$('#ed-t').value,b=base(s,id,T),cod=$('#ed-c').value,hora=$('#ed-h').value,j=$('#ed-j').checked,jt=$('#ed-jt').value.trim();
+  if(id!==yo&&!esJefe())return;
+  if(tipo==='L'&&!cod){toast('Elige el motivo del libre.');return}
+  const n={};if(tipo&&tipo!==b)n.tipo=tipo;if(tipo==='L')n.codigo=cod;const te=tipo||b;
+  if(hora&&(te==='M'||te==='T')&&hora!==horaDef(id,te))n.hora=hora;if(j){n.juicio=true;if(jt)n.juicioTxt=jt}
+  t.disabled=true;if(await guardarTurno(s,id,Object.keys(n).length?n:null)){toast('Guardado');renderEditor()}t.disabled=false;return}
+ if(t.id==='ed-reset'){if(await guardarTurno(selDia,editP,null))renderEditor();return}
+ if(t.id==='nota-save'){const s=selDia,x=$('#nota').value.trim();try{if(x)await setDoc(priv('nota_'+s),{tipo:'nota',fecha:s,texto:x});else await deleteDoc(priv('nota_'+s));toast('Nota guardada')}catch(e){fail(e)}return}
+ if(d.ej){const j=juicios.find(x=>x.id===d.ej),f=$('#jf');if(!j)return;editJ=j.id;fotoNueva=null;
+  f.lugar.value=j.lugar||'Sevilla';f.mod.value=j.mod||'Presencial';f.sol.checked=!!j.sol;f.con.checked=!!j.con;f.jur.value=j.jur||'Penal';f.sala.value=j.sala||'';f.fecha.value=j.fecha||'';f.hora.value=j.hora||'';f.citado.value=j.citado||'';f.proc.value=j.proc||'';f.inf.value=j.inf||'';
+  $('#jtit').textContent='Editar juicio';$('#jcancel').classList.remove('hid');$('#jprev').classList.add('hid');jform();f.scrollIntoView({behavior:'smooth'});return}
+ if(t.id==='jcancel'){resetJ();return}
+ if(d.bj){if(t.dataset.ok){try{await deleteDoc(priv(d.bj));await deleteDoc(priv('foto_'+d.bj));toast('Juicio borrado')}catch(e){fail(e)}}else{t.dataset.ok=1;t.textContent='¿Seguro? Toca otra vez'}return}
+ if(d.vfoto){const bx=$('#fx-'+d.vfoto);if(bx.innerHTML){bx.innerHTML='';return}bx.textContent='Cargando…';try{const x=await getDoc(priv('foto_'+d.vfoto));bx.innerHTML=x.exists()?`<img src="${esc(x.data().img)}" alt="Foto del juicio">`:'Sin foto'}catch(e){bx.textContent='No se pudo cargar'}return}
+ if(d.bp){try{await deleteDoc(doc(db,'basica',d.bp))}catch(e){fail(e)}return}
+ if(d.fq){const q=new Set(cfgF.quitar||[]);if(cfgF.extra?.[d.fq]&&!q.has(d.fq)){const ex={...cfgF.extra};delete ex[d.fq];cfgF={...cfgF,extra:ex}}else{q.has(d.fq)?q.delete(d.fq):q.add(d.fq);cfgF={...cfgF,quitar:[...q]}}render();
+  try{await setDoc(doc(db,'config','festivos'),cfgF)}catch(e){fail(e)}return}
+ if(t.id==='notif'){activarAvisos();return}
+ if(t.id==='plan-save'){const emails={},admins=[];let malo='';
+  for(const i of $$('[data-pe]')){const v=i.value.trim().toLowerCase();if(!v)continue;if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){malo=v;break}if(emails[v]){malo=v+' (repetido)';break}emails[v]=i.dataset.pe;if($(`[data-adm="${i.dataset.pe}"]`)?.checked)admins.push(v)}
+  if(malo){toast('Correo no válido: '+malo);return}
+  if(!Object.values(emails).includes(yo)){toast('No puedes quitar tu propio correo.');return}
+  if(!esJefe()&&!admins.includes(email)){toast('No puedes quitarte como administrador a ti mismo.');return}
+  t.disabled=true;try{await setDoc(doc(db,'config','plantilla'),{emails,admins});toast('Plantilla guardada')}catch(e){fail(e)}t.disabled=false;return}
+});
+document.addEventListener('change',async ev=>{const t=ev.target;
+ if(t.id==='ed-p'){editP=t.value;renderEditor();return}
+ if(t.id==='ed-t'){const b=base(selDia,editP,T),te=t.value||b;$('#w-cod').classList.toggle('hid',t.value!=='L');$('#w-h').classList.toggle('hid',!(te==='M'||te==='T'));return}
+ if(t.id==='ed-j'){$('#w-j').classList.toggle('hid',!t.checked);return}
+ if(t.closest('#jf')&&t.type==='radio'){jform();return}
+ if(t.id==='jfoto'&&t.files[0]){try{fotoNueva=await comprimir(t.files[0]);const im=$('#jprev');im.src=fotoNueva;im.classList.remove('hid')}catch(e){toast('No se pudo leer la imagen')}return}
+ if(['sy','sm','shoy'].includes(t.id)){calcStats();return}
+ if(t.id==='lf'){renderJefes();return}
+ if(t.name==='modo'){perfil={...perfil,modo:t.value};try{await updateDoc(doc(db,'usuarios',me.uid),{modo:t.value});toast('Preferencia guardada')}catch(e){fail(e)}return}
+ if(t.dataset.cad){const o={...(cfgC.over||{})};if(t.value)o[t.dataset.cad]=t.value;else delete o[t.dataset.cad];cfgC={...cfgC,over:o};render();try{await setDoc(doc(db,'config','cadencia'),cfgC)}catch(e){fail(e)}return}
+ if(t.dataset.pe){const a=$(`[data-adm="${t.dataset.pe}"]`);if(a)a.disabled=!t.value.trim();return}
+});
+$('#jf').addEventListener('submit',async ev=>{ev.preventDefault();
+ const f=ev.target,fu=f.lugar.value==='Fuera',btn=f.querySelector('[type=submit]');
+ const j={tipo:'juicio',lugar:f.lugar.value,mod:fu?f.mod.value:'',sol:fu&&f.mod.value==='WebEx'&&f.sol.checked,con:fu&&f.mod.value==='WebEx'&&f.con.checked,jur:f.jur.value,sala:f.sala.value.trim(),fecha:f.fecha.value,hora:f.hora.value,citado:f.citado.value,proc:f.proc.value.trim(),inf:f.inf.value.trim(),ts:Date.now()};
+ const id=editJ||('juicio_'+Date.now().toString(36)),viejo=juicios.find(x=>x.id===id);j.foto=!!(fotoNueva||viejo?.foto);
+ btn.disabled=true;
+ try{if(fotoNueva)await setDoc(priv('foto_'+id),{tipo:'foto',img:fotoNueva});await setDoc(priv(id),j);
+  if(f.marcar.checked&&j.fecha){let o=T[j.fecha+'|'+yo];if(!o){const x=await getDoc(doc(db,'turnos',j.fecha+'_'+yo));if(x.exists())o=x.data()}
+   const{fecha,persona,por,ts,...n}=o||{};n.juicio=true;n.juicioTxt=[j.hora,j.jur,j.sala].filter(Boolean).join(' ');await guardarTurno(j.fecha,yo,n)}
+  toast('Juicio guardado');resetJ()}catch(e){fail(e)}btn.disabled=false});
+$('#pf').addEventListener('submit',async ev=>{ev.preventDefault();const f=ev.target,txt=f.txt.value.trim();if(!txt)return;
+ try{await addDoc(collection(db,'basica'),{per:f.per.value,cuando:f.cuando.value.trim(),txt,autor:yo,ts:serverTimestamp()});f.txt.value='';toast('Añadida')}catch(e){fail(e)}});
+$('#ff').addEventListener('submit',async ev=>{ev.preventDefault();const f=ev.target;if(!f.f.value||!f.n.value.trim())return;cfgF={...cfgF,extra:{...(cfgF.extra||{}),[f.f.value]:f.n.value.trim()}};f.reset();render();try{await setDoc(doc(db,'config','festivos'),cfgF)}catch(e){fail(e)}});
+$('#ov').addEventListener('click',e=>{if(e.target.id==='ov')cerrar()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrar()});
+const y0=new Date().getFullYear();$('#sy').innerHTML=[y0-1,y0,y0+1].map(y=>`<option${y===y0?' selected':''}>${y}</option>`).join('');
+$('#sm').innerHTML='<option value="">Todo el año</option>'+MES.map((m,i)=>`<option value="${i}">${m[0]+m.slice(1).toLowerCase()}</option>`).join('');
+let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(yo&&tab==='cuadrante')renderCal()},150)});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./firebase-messaging-sw.js',{scope:'./'}).catch(()=>{});
+</script>
+</body></html>
